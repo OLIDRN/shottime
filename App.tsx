@@ -1,20 +1,16 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { HomeScreen } from './src/screens/HomeScreen';
+import { useFonts as usePoppins, Poppins_700Bold } from '@expo-google-fonts/poppins';
+import { useFonts as useInter, Inter_400Regular } from '@expo-google-fonts/inter';
+import AppLoading from 'expo-app-loading';
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+  const [poppinsLoaded] = usePoppins({ Poppins_700Bold });
+  const [interLoaded] = useInter({ Inter_400Regular });
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+  if (!poppinsLoaded || !interLoaded) {
+    return <AppLoading />;
+  }
+
+  return <HomeScreen />;
+}
