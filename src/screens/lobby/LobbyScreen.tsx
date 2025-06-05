@@ -35,6 +35,7 @@ export const LobbyScreen: React.FC = () => {
       .select('*')
       .eq('party_code', code)
       .order('joined_at', { ascending: true });
+    console.log('[fetchPlayers] data:', data, 'error:', error);
     setPlayers(data || []);
     setLoading(false);
   }, [code]);
@@ -57,6 +58,7 @@ export const LobbyScreen: React.FC = () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'joueurs', filter: `party_code=eq.${code}` },
         (payload) => {
+          console.log('[Realtime callback] payload:', payload);
           if (isMounted) fetchPlayers();
         }
       )
@@ -101,6 +103,8 @@ export const LobbyScreen: React.FC = () => {
     ]);
   };
 
+  const canStart = players.length >= 2;
+
   return (
     <ShotTimeContainer>
       <ShotTimeHeader title="Lobby" showBack={false} />
@@ -124,12 +128,19 @@ export const LobbyScreen: React.FC = () => {
             </View>
           )}
         </View>
-        {isHost && (
+        {isHost ? (
           <View style={styles.buttonRow}>
-            <ShotTimeButton title="Lancer" onPress={() => {}} style={{ flex: 1, marginRight: 8 }} />
+            <ShotTimeButton
+              title="Lancer"
+              onPress={() => {
+                if (canStart) navigation.navigate('ChooseGame', { code, pseudo });
+              }}
+              style={{ flex: 1, marginRight: 8 }}
+              disabled={!canStart}
+            />
             <ShotTimeButton title="Quitter" onPress={handleQuitHost} style={{ backgroundColor: COLORS.pink, flex: 1, marginLeft: 8 }} />
           </View>
-        )}
+        ): null}
       </View>
     </ShotTimeContainer>
   );

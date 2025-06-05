@@ -21,22 +21,13 @@ export const ShotTimeBackButton: React.FC<{ style?: any }> = ({ style }) => {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: COLORS.violet,
-    borderRadius: 24,
     padding: 8,
-    shadowColor: COLORS.pink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.7,
-    shadowRadius: 8,
     elevation: 6,
     alignSelf: 'flex-start',
     margin: 8,
   },
   pressed: {
-    shadowRadius: 16,
-    shadowOpacity: 1,
-    elevation: 12,
-    backgroundColor: COLORS.pink,
+    opacity: 0.8,
   },
   iconContainer: {
     alignItems: 'center',
