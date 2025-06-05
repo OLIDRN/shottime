@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Alert } from 'react-native';
 import { ShotTimeContainer } from '../../components/ShotTimeContainer';
 import { ShotTimeHeader } from '../../components/ShotTimeHeader';
 import { ShotTimeButton } from '../../components/ShotTimeButton';
 import { COLORS, FONTS } from '../../theme';
-import { usePartyStore } from '../../store/partyStore';
+import { supabase } from '../../supabase/client';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/AppNavigator';
@@ -13,17 +13,46 @@ export const JoinGameScreen: React.FC = () => {
   const [pseudo, setPseudo] = React.useState('');
   const [code, setCode] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
-  const joinParty = usePartyStore((s) => s.joinParty);
+  const [loading, setLoading] = React.useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     setError(null);
-    const result = joinParty(code, pseudo);
-    if (!result.success) {
-      setError(result.error || 'Erreur inconnue');
-    } else {
-      navigation.replace('Lobby', { code, pseudo });
+    setLoading(true);
+    const { data: parties, error: partyError } = await supabase
+      .from('parties')
+      .select('code')
+      .eq('code', code);
+    if (partyError || !parties || parties.length === 0) {
+      setError('Code de session invalide.');
+      setLoading(false);
+      return;
     }
+    const { data: joueurs, error: joueursError } = await supabase
+      .from('joueurs')
+      .select('pseudo')
+      .eq('party_code', code)
+      .eq('pseudo', pseudo);
+    if (joueursError) {
+      setError('Erreur lors de la vérification du pseudo.');
+      setLoading(false);
+      return;
+    }
+    if (joueurs && joueurs.length > 0) {
+      setError('Pseudo déjà pris dans cette partie.');
+      setLoading(false);
+      return;
+    }
+    // 3. Ajouter le joueur
+    const { error: insertError } = await supabase
+      .from('joueurs')
+      .insert([{ pseudo, party_code: code, is_host: false }]);
+    setLoading(false);
+    if (insertError) {
+      setError('Erreur lors de la connexion à la partie.');
+      return;
+    }
+    navigation.replace('Lobby', { code, pseudo });
   };
 
   return (
@@ -53,9 +82,9 @@ export const JoinGameScreen: React.FC = () => {
         />
         {error && <Text style={styles.error}>{error}</Text>}
         <ShotTimeButton
-          title="Rejoindre la partie"
+          title={loading ? 'Connexion...' : 'Rejoindre la partie'}
           onPress={handleJoin}
-          disabled={pseudo.trim().length < 2 || code.trim().length < 3}
+          disabled={pseudo.trim().length < 2 || code.trim().length < 3 || loading}
         />
       </View>
     </ShotTimeContainer>
