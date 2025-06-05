@@ -1,8 +1,8 @@
 import React from 'react';
-import { HomeScreen } from './src/screens/HomeScreen';
 import { useFonts as usePoppins, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import { useFonts as useInter, Inter_400Regular } from '@expo-google-fonts/inter';
 import AppLoading from 'expo-app-loading';
+import { AppNavigator } from './src/navigation/AppNavigator';
 
 export default function App() {
   const [poppinsLoaded] = usePoppins({ Poppins_700Bold });
@@ -12,5 +12,5 @@ export default function App() {
     return <AppLoading />;
   }
 
-  return <HomeScreen />;
+  return <AppNavigator />;
 }

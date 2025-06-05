@@ -16,6 +16,5 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.violet,
     paddingHorizontal: 24,
-    paddingTop: 48,
   },
 }); 
