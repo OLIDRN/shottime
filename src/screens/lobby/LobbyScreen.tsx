@@ -4,7 +4,7 @@ import { ShotTimeContainer } from '../../components/ShotTimeContainer';
 import { ShotTimeHeader } from '../../components/ShotTimeHeader';
 import { ShotTimeButton } from '../../components/ShotTimeButton';
 import { COLORS, FONTS } from '../../theme';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useIsFocused } from '@react-navigation/native';
 import { supabase } from '../../supabase/client';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/AppNavigator';
@@ -23,6 +23,7 @@ type Joueur = {
 export const LobbyScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const isFocused = useIsFocused();
   const { code, pseudo } = (route.params || {}) as LobbyRouteParams;
   const [players, setPlayers] = React.useState<Joueur[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -35,7 +36,6 @@ export const LobbyScreen: React.FC = () => {
       .select('*')
       .eq('party_code', code)
       .order('joined_at', { ascending: true });
-    console.log('[fetchPlayers] data:', data, 'error:', error);
     setPlayers(data || []);
     setLoading(false);
   }, [code]);
@@ -58,7 +58,6 @@ export const LobbyScreen: React.FC = () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'joueurs', filter: `party_code=eq.${code}` },
         (payload) => {
-          console.log('[Realtime callback] payload:', payload);
           if (isMounted) fetchPlayers();
         }
       )
@@ -74,13 +73,27 @@ export const LobbyScreen: React.FC = () => {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'parties', filter: `code=eq.${code}` },
+        (payload) => {
+          if (!isFocused) return;
+          if (isMounted && payload.new.selected_game) {
+            if (payload.new.selected_game === '97') {
+              navigation.replace('Game97', { code, pseudo });
+            } else if (payload.new.selected_game === 'jeu_roi') {
+              navigation.replace('JeuRoi', { code, pseudo });
+            }
+          }
+        }
+      )
       .subscribe();
     return () => {
       isMounted = false;
       channelJoueurs.unsubscribe();
       channelParties.unsubscribe();
     };
-  }, [code, fetchPlayers, checkParty]);
+  }, [code, fetchPlayers, checkParty, navigation, pseudo, isFocused]);
 
   React.useEffect(() => {
     if (!partyExists) {

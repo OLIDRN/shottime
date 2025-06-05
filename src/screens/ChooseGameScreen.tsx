@@ -5,6 +5,7 @@ import { ShotTimeHeader } from '../components/ShotTimeHeader';
 import { COLORS, FONTS } from '../theme';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { supabase } from '../supabase/client';
 
 const GAMES = [
   { key: '97', label: '97' },
@@ -14,7 +15,17 @@ const GAMES = [
 type Props = NativeStackScreenProps<RootStackParamList, 'ChooseGame'>;
 
 export const ChooseGameScreen: React.FC<Props> = ({ navigation, route }) => {
-    return (
+  const handleChooseGame = async (gameKey: string) => {
+    const { code, pseudo } = route.params;
+    await supabase.from('parties').update({ selected_game: gameKey }).eq('code', code);
+    if (gameKey === '97') {
+      navigation.replace('Game97', { code, pseudo });
+    } else if (gameKey === 'jeu_roi') {
+      navigation.replace('JeuRoi', { code, pseudo });
+    }
+  };
+
+  return (
     <LinearGradient
       colors={[COLORS.violet, COLORS.violet, COLORS.pink]}
       style={styles.gradient}
@@ -27,7 +38,7 @@ export const ChooseGameScreen: React.FC<Props> = ({ navigation, route }) => {
         <FlatList
           data={GAMES}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.gameCard} activeOpacity={0.85} onPress={() => {}}>
+            <TouchableOpacity style={styles.gameCard} activeOpacity={0.85} onPress={() => handleChooseGame(item.key)}>
               <Text style={styles.gameLabel}>{item.label}</Text>
             </TouchableOpacity>
           )}
