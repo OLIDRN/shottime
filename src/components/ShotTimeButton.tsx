@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { Pressable, Text, StyleSheet, ViewStyle, TextStyle, Animated } from 'react-native';
 import { COLORS, FONTS } from '../theme';
 
 interface ShotTimeButtonProps {
@@ -16,16 +16,58 @@ export const ShotTimeButton: React.FC<ShotTimeButtonProps> = ({
   style,
   textStyle,
   disabled = false,
-}) => (
-  <TouchableOpacity
-    style={[styles.button, style, disabled && { opacity: 0.6 }]}
-    onPress={onPress}
-    activeOpacity={0.8}
-    disabled={disabled}
-  >
-    <Text style={[styles.text, textStyle]}>{title}</Text>
-  </TouchableOpacity>
-);
+}) => {
+  const scale = React.useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.96,
+      useNativeDriver: true,
+      speed: 30,
+      bounciness: 8,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 30,
+      bounciness: 8,
+    }).start();
+  };
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={disabled}
+      style={({ pressed }) => [
+        { opacity: disabled ? 0.6 : 1 },
+      ]}
+    >
+      <Animated.View
+        style={[ 
+          styles.button, 
+          style, 
+          { transform: [{ scale }] },
+          pressedGlowStyle,
+        ]}
+      >
+        <Text style={[styles.text, textStyle]}>{title}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+};
+
+const pressedGlowStyle = {
+  shadowColor: COLORS.pink,
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.7,
+  shadowRadius: 24,
+  elevation: 12,
+};
 
 const styles = StyleSheet.create({
   button: {
